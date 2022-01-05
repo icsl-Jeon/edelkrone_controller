@@ -35,7 +35,7 @@ R_delta = T_delta(1:3,1:3);
 t_delta = T_delta(1:3,4);
 
 
-%% Check data sanity R_delta vs zed rotation? 
+%% Check data sanity R_delta vs zed rotation ? 
 element_diff_history = [];
 t_zed_history = [];
 t_delta_history = [];
@@ -44,7 +44,7 @@ for n = 1:size(data,1)
     edelkrone_state = data(n,1:3)';
     T_zed = reshape(data(n,4:end),4,4)';
     R_zed = T_zed(1:3,1:3); t_zed_history = [t_zed_history ; T_zed(1:3,4)];
-    
+    % the delvelop of rotation does not rely on edelkrone dimension..?
     R_delta_subs = double(subs(R_delta, state, edelkrone_state));
     t_delta_subs = subs(t_delta,state,edelkrone_state); t_delta_history = [t_delta_history ; t_delta_subs];
     
@@ -61,13 +61,14 @@ ns = null(M); % tells that z axis of t_pt and (y-axis of t_pt + z axis of t_pc) 
 % In conclusion, p11, p12, p12-p21, p23 only matter 
 n_rank = rank(M);
 [U,S,V] = svd(M);
-vs = V(:,1:4); % basis. x = vs*xv + ns*xn 
-M_v = M*vs
-
+vs = V(:,1:4); % basis. x = vs*wv + ns*wm = xv + xn
+Mv = M*vs % y = M * (xv+xn) = M * xv = (M*vs) * wv. Our optim variable is wv now.  
+sum(sum(abs(M*ns))) % numerical error: not exactly zero
 
 %% Finding t_pt / t_tc 
-x_v = M_v\t_zed_history;
-x_n = sym('x_n',[2 1],'real');
-x_sol = vs*x_v + ns*x_n; 
 
+wv = Mv\t_zed_history;
+wn = sym('x_n',[2 1],'real');
+x_sol = vs*wv 
+error = abs(t_zed_history - (Mv*wv)); % y element of tilt axis not good..
 
