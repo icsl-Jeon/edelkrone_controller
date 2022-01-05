@@ -176,6 +176,6 @@ if __name__ == "__main__":
 
         # Save data
         total_data[x][0:3] = [curSlide*0.01, curPan*math.pi/180.0, curTilt*math.pi/180.0]
-        total_data[x][3:] = pose_data.m.flatten("C")
+        total_data[x][3:] = pose_data.m.flatten("C") # row-major
 
     np.savetxt("calibration_result.txt",total_data)
