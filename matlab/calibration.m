@@ -26,13 +26,16 @@ R_oc = T_oc(1:3,1:3);
 M = equationsToMatrix(t_oc,[t_pt t_tc]);
 
 % initial camera pose (unknown)
-T_oc_0 = (subs(T_oc,state,data(1,1:3)')); % still symbolic w.r.t. p1 and p2 
-R_oc_0 = double(subs(R_oc,state,data(1,1:3)'));
+initial_state = [0 pi/2.0 0]'; 
+% T_oc_0 = (subs(T_oc,state,data(1,1:3)')); % still symbolic w.r.t. p1 and p2 
+% R_oc_0 = double(subs(R_oc,state,data(1,1:3)'));
+T_oc_0 = (subs(T_oc,state,initial_state)); % still symbolic w.r.t. p1 and p2 
+R_oc_0 = double(subs(R_oc,state,initial_state));
 t_oc_0 = T_oc_0(1:3,4);
 
 T_delta = [[R_oc_0'*R_oc R_oc'*(t_oc-t_oc_0)] ; [0 0 0 1]];
 R_delta = T_delta(1:3,1:3);
-t_delta = T_delta(1:3,4);
+t_delta = T_delta(1:3,4); % translation difference 
 
 
 %% Check data sanity R_delta vs zed rotation ? 
@@ -66,9 +69,13 @@ Mv = M*vs % y = M * (xv+xn) = M * xv = (M*vs) * wv. Our optim variable is wv now
 sum(sum(abs(M*ns))) % numerical error: not exactly zero
 
 %% Finding t_pt / t_tc 
-
 wv = Mv\t_zed_history;
 wn = sym('x_n',[2 1],'real');
 x_sol = vs*wv 
 error = abs(t_zed_history - (Mv*wv)); % y element of tilt axis not good..
+
+%% 
+
+
+
 
