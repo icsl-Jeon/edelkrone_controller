@@ -10,6 +10,7 @@ import requests
 import json
 import time
 import pyzed.sl as sl
+import time
 
 httpURL = "http://127.0.0.1:32222/v1"
 
@@ -128,10 +129,12 @@ if __name__ == "__main__":
     positional_tracking_parameters = sl.PositionalTrackingParameters()
     zed.enable_positional_tracking(positional_tracking_parameters)
 
+
     runtime = sl.RuntimeParameters()
     camera_pose = sl.Pose()
     py_translation = sl.Translation()
     pose_data = sl.Transform()
+
 
     total_data = np.zeros((n_pan*n_tilt*n_slide,3+16))
     n_data_count = 0
@@ -145,12 +148,12 @@ if __name__ == "__main__":
                     curSlide = float(status["data"]["readings"]["slide"])
                     curPan = float(status["data"]["readings"]["headPan"])
                     curTilt = float(status["data"]["readings"]["headTilt"])
-                    duration = abs(curSlide - slide) / 10.0*5
+                    duration = abs(curSlide - slide)
                     keyposeStoreNumeric(linkID, pan, tilt, slide, aimIndex)
                     time.sleep(0.250)
                     # execute
-                    keyposeMoveFixedDuration(linkID, duration, aimIndex, acceleration)
-                    time.sleep(0.5)
+                    keyposeMoveFixedDuration(linkID, duration, aimIndex, acceleration,False)
+                    time.sleep(duration)
 
                     # read edelkrone state
                     status = bundleStatus(linkID, False)
@@ -171,6 +174,10 @@ if __name__ == "__main__":
                             text_translation = str((round(translation.get()[0], 2), round(translation.get()[1], 2), round(translation.get()[2], 2)))
                             pose_data = camera_pose.pose_data(sl.Transform())
                             print("zed translation (ENU coordinate): {} ".format(text_translation))
+                        else:
+                            print("zed tracking failed.")
+
+
 
 
                     # Save data
