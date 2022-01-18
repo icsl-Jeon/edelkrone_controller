@@ -1,5 +1,5 @@
 %% Load calibration data 
-calibration_file = '../calibration_result3txt';
+calibration_file = '../calibration_result3.txt';
 data = load(calibration_file); % slide (m) / pan (rad) / tilt (rad) / pose mat (4x4) flattened in row major 
 
 %% Calibration data check
@@ -45,10 +45,12 @@ t_tc = sym('p2',[3 1],'real'); % translation from title to camera frame
 M_q = sym('M',[3 6],'real'); % 
 
 % ref frame to pan baset_oc
-R_op = [cos(state(2)) -sin(state(2)) 0; sin(state(2)) cos(state(2)) 0; 0 0 1]; t_op = [0 -state(1) 0]'; T_op = [[R_op t_op] ; [ 0 0 0 1]];
+R_op = [cos(state(2)) -sin(state(2)) 0; sin(state(2)) cos(state(2)) 0; 0 0 1]; 
+t_op = [0 -state(1) 0]'; T_op = [[R_op t_op] ; [ 0 0 0 1]];
 
 % pan base to tile base
-R_pt = [1 0 0 ; 0 0 -1; 0 1 0]*[cos(state(3)) -sin(state(3)) 0; sin(state(3)) cos(state(3)) 0; 0 0 1]; T_pt = [[R_pt t_pt]; [0 0 0 1]];
+R_pt = [1 0 0 ; 0 0 -1; 0 1 0]*[cos(state(3)) -sin(state(3)) 0; sin(state(3)) cos(state(3)) 0; 0 0 1]; 
+T_pt = [[R_pt t_pt]; [0 0 0 1]];
 
 % tilt base to cam base 
 R_tc = [1 0 0; 0 0 1 ; 0 -1 0]; T_tc = [[R_tc t_tc]; [0 0 0 1]]; 
@@ -76,8 +78,9 @@ t_delta = T_delta(1:3,4); % translation difference w.r.t R_oc_0
 element_diff_history = [];
 t_zed_history = []; % zed visual odometry 
 t_delta_history = []; 
+total_optim_num = ceil(size(data,1) / 3);
 
-for n = 1:size(data,1) 
+for n = 1: total_optim_num
     edelkrone_state = data(n,1:3)';
     T_zed = reshape(data(n,4:end),4,4)';
     R_zed = T_zed(1:3,1:3); t_zed_history = [t_zed_history ; T_zed(1:3,4)];
@@ -90,10 +93,10 @@ for n = 1:size(data,1)
     element_diff_history = [element_diff_history element_diff];    
 end
 
-figure(1);
-subplot(2,1,1)
-plot(element_diff_history,'ko-');
-title("$||R_{0}'R_{1} - R_{zed}||$",'Interpreter','latex')
+% figure(1);
+% subplot(2,1,1)
+% plot(element_diff_history,'ko-');
+% title("$||R_{0}'R_{1} - R_{zed}||$",'Interpreter','latex')
 
 %% best fitting kinematic parameters? 
 
@@ -117,14 +120,14 @@ wv = (big_eye*Mv)\(big_eye*t_zed_history);
 % wv = quadprog(Mv'*Mv, -t_zed_history'*Mv); % same with the above
 wn = sym('x_n',[2 1],'real');
 x_sol = vs*wv 
-error = mean(abs(t_zed_history - (Mv*wv))) % y element of tilt axis not good..
+error = (abs(t_zed_history - (Mv*wv))); % y element of tilt axis not good..
 
 %% Interpret result
-calibration_file = '../calibration_result1.txt';
+calibration_file = '../calibration_result3.txt';
 data = load(calibration_file); % slide (m) / pan (rad) / tilt (rad) / pose mat (4x4) flattened in row major 
 xyz_zed = []; 
 xyz_delta = []; 
-for n = 1:size(data,1) 
+for n = 1:min(size(data,1),total_optim_num)
     edelkrone_state = data(n,1:3)';
     T_zed = reshape(data(n,4:end),4,4)';
     R_zed = T_zed(1:3,1:3); 
