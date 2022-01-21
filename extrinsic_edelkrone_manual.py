@@ -133,7 +133,6 @@ if __name__ == "__main__":
     positional_tracking_parameters = sl.PositionalTrackingParameters()
     zed.enable_positional_tracking(positional_tracking_parameters)
 
-
     runtime = sl.RuntimeParameters()
     camera_pose = sl.Pose()
     py_translation = sl.Translation()

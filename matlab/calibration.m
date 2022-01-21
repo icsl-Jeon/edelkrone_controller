@@ -1,5 +1,7 @@
 %% Load calibration data 
+% calibration_file = '../20220121151001/calibration_result.txt';
 calibration_file = '../calibration_result3.txt';
+
 data = load(calibration_file); % slide (m) / pan (rad) / tilt (rad) / pose mat (4x4) flattened in row major 
 
 %% Calibration data check
@@ -49,7 +51,7 @@ R_op = [cos(state(2)) -sin(state(2)) 0; sin(state(2)) cos(state(2)) 0; 0 0 1];
 t_op = [0 -state(1) 0]'; T_op = [[R_op t_op] ; [ 0 0 0 1]];
 
 % pan base to tile base
-R_pt = [1 0 0 ; 0 0 -1; 0 1 0]*[cos(state(3)) -sin(state(3)) 0; sin(state(3)) cos(state(3)) 0; 0 0 1]; 
+R_pt = [0 0 -1 ; -1 0 0; 0 1 0]*[cos(state(3)) -sin(state(3)) 0; sin(state(3)) cos(state(3)) 0; 0 0 1]; 
 T_pt = [[R_pt t_pt]; [0 0 0 1]];
 
 % tilt base to cam base 
@@ -61,7 +63,7 @@ t_oc = T_oc(1:3,4);
 R_oc = T_oc(1:3,1:3);
 
 % initial camera pose (unknown)
-initial_state = [0 pi/2.0 0]'; 
+initial_state = [0 pi/2.0 0]';  
 % T_oc_0 = (subs(T_oc,state,data(1,1:3)')); % still symbolic w.r.t. p1 and p2 
 % R_oc_0 = double(subs(R_oc,state,data(1,1:3)'));
 T_oc_0 = (subs(T_oc,state,initial_state)); % still symbolic w.r.t. p1 and p2 
@@ -78,7 +80,7 @@ t_delta = T_delta(1:3,4); % translation difference w.r.t R_oc_0
 element_diff_history = [];
 t_zed_history = []; % zed visual odometry 
 t_delta_history = []; 
-total_optim_num = ceil(size(data,1) / 3);
+total_optim_num = size(data,1);
 
 for n = 1: total_optim_num
     edelkrone_state = data(n,1:3)';
@@ -93,10 +95,10 @@ for n = 1: total_optim_num
     element_diff_history = [element_diff_history element_diff];    
 end
 
-% figure(1);
-% subplot(2,1,1)
-% plot(element_diff_history,'ko-');
-% title("$||R_{0}'R_{1} - R_{zed}||$",'Interpreter','latex')
+figure(1);
+subplot(2,1,1)
+plot(element_diff_history,'ko-');
+title("$||R_{0}'R_{1} - R_{zed}||$",'Interpreter','latex')
 
 %% best fitting kinematic parameters? 
 
@@ -123,11 +125,20 @@ x_sol = vs*wv
 error = (abs(t_zed_history - (Mv*wv))); % y element of tilt axis not good..
 
 %% Interpret result
+x_sol =[
+    0.0988
+    0.0294
+    0.0000
+    0.0887
+   -0.0493
+   -0.0988
+];
 calibration_file = '../calibration_result3.txt';
+% calibration_file = '../20220121151001/calibration_result.txt';
 data = load(calibration_file); % slide (m) / pan (rad) / tilt (rad) / pose mat (4x4) flattened in row major 
 xyz_zed = []; 
 xyz_delta = []; 
-for n = 1:min(size(data,1),total_optim_num)
+for n = 1:size(data,1)
     edelkrone_state = data(n,1:3)';
     T_zed = reshape(data(n,4:end),4,4)';
     R_zed = T_zed(1:3,1:3); 
