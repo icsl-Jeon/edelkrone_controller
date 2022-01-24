@@ -101,8 +101,9 @@ plot(element_diff_history,'ko-');
 title("$||R_{0}'R_{1} - R_{zed}||$",'Interpreter','latex')
 
 %% best fitting kinematic parameters? 
-
-M = double(equationsToMatrix(t_delta_history, [t_pt t_tc])) ;
+[AA,bb] = equationsToMatrix(t_delta_history, [t_pt t_tc]);
+M = double(AA) ;
+l = double(bb);
 ns = null(M); % tells that z axis of t_pt and (y-axis of t_pt + z axis of t_pc) do not produce  
 % In conclusion, p11, p12, p12-p21, p23 only matter 
 n_rank = rank(M);
@@ -118,7 +119,7 @@ for n = 1: (length(t_zed_history)/3)
    big_eye(3*n-2:3*n,3*n-2:3*n) = weight;
 end
 
-wv = (big_eye*Mv)\(big_eye*t_zed_history);
+wv = (big_eye*Mv)\(big_eye*(t_zed_history-l));
 % wv = quadprog(Mv'*Mv, -t_zed_history'*Mv); % same with the above
 wn = sym('x_n',[2 1],'real');
 x_sol = vs*wv 
@@ -133,8 +134,8 @@ x_sol =[
    -0.0493
    -0.0988
 ];
-calibration_file = '../calibration_result3.txt';
-% calibration_file = '../20220121151001/calibration_result.txt';
+% calibration_file = '../calibration_result3.txt';
+calibration_file = '../20220121151001/calibration_result.txt';
 data = load(calibration_file); % slide (m) / pan (rad) / tilt (rad) / pose mat (4x4) flattened in row major 
 xyz_zed = []; 
 xyz_delta = []; 
