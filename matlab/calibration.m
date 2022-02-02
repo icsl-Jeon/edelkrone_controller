@@ -5,39 +5,50 @@ calibration_file = '../calibration_result3.txt';
 data = load(calibration_file); % slide (m) / pan (rad) / tilt (rad) / pose mat (4x4) flattened in row major 
 
 %% Calibration data check
-figure(10)
-sgtitle("Edelkrone state")
-subplot(3,1,1)
-h_slide = plot(data(:,1));
-title("slide [m]")
-
-subplot(3,1,2)
-h_pan = plot(data(:,2));
-title("pan [rad]")
-
-subplot(3,1,3)
-h_title = plot(data(:,3));
-title("tilt [rad]")
+% figure(10)
+% sgtitle("Edelkrone state")
+% subplot(3,1,1)
+% h_slide = plot(data(:,1));
+% title("slide [m]")
+% 
+% subplot(3,1,2)
+% h_pan = plot(data(:,2));
+% title("pan [rad]")
+% 
+% subplot(3,1,3)
+% h_title = plot(data(:,3));
+% title("tilt [rad]")
 
 fps = 20;
 figure(13)
 cla
+filename = 'cam_move.gif';
 title("Cam pose history")
 grid on
 view([46 30])
 hold on
 axis equal
 axis([-0.2 0.2 -0.2 0.2 -0.1 0.1])
-for n = 1:2:size(data,1)
+for n = 1:1:size(data,1)
     T_zed = reshape(data(n,4:end),4,4)';
     pose.R = T_zed(1:3,1:3);
     pose.t = T_zed(1:3,4);
+    xlabel('x')
+    ylabel('y')
+    zlabel('z')
     SE3plot(pose,0.02,1.6)    
-    pause(1.0/fps)
+    drawnow
+    frame = getframe(13);
+    im = frame2im(frame);
+    [imind,cm] = rgb2ind(im,256);
+    if n == 1;
+      imwrite(imind,cm,filename,'gif', 'Loopcount',inf, 'DelayTime',0.02);
+    else
+      imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',0.02);
+    end
+%     pause(1.0/fps)
 end
-xlabel('x')
-ylabel('y')
-zlabel('z')
+
 
 
 %% Symbolic definition 
@@ -134,8 +145,8 @@ x_sol =[
    -0.0493
    -0.0988
 ];
-% calibration_file = '../calibration_result3.txt';
-calibration_file = '../20220121151001/calibration_result.txt';
+calibration_file = '../calibration_result1.txt';
+% calibration_file = '../20220121151001/calibration_result.txt';
 data = load(calibration_file); % slide (m) / pan (rad) / tilt (rad) / pose mat (4x4) flattened in row major 
 xyz_zed = []; 
 xyz_delta = []; 
